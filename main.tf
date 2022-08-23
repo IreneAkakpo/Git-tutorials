@@ -123,7 +123,7 @@ resource "aws_nat_gateway" "Irene-Nat-gateway" {
 
 # Associating NATgateway with private route table
 resource "aws_route" "Irene-Nat-association" {
-  route_table_id = aws_route_table.private-route-table
+  route_table_id = aws_route_table.private-route-table.id
   nat_gateway_id = aws_nat_gateway.Irene-Nat-gateway.id
   destination_cidr_block = "0.0.0.0/0"
 }
