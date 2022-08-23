@@ -105,3 +105,25 @@ resource "aws_route" "public-igw-route" {
   gateway_id = aws_internet_gateway.IGW.id
   destination_cidr_block    = "0.0.0.0/0"
 }
+
+# Create Elastic IP
+resource "aws_eip" "Irene-EIP" {
+  vpc = true
+}
+
+# Create NAT gateway
+resource "aws_nat_gateway" "Irene-Nat-gateway" {
+  allocation_id = aws_eip.Irene-EIP.id
+  subnet_id = aws_subnet.public-subnet1.id
+
+  tags = {
+    Name = "Irene-Nat-gateway"
+  }
+}
+
+# Associating NATgateway with private route table
+resource "aws_route" "Irene-Nat-association" {
+  route_table_id = aws_route_table.private-route-table
+  nat_gateway_id = aws_nat_gateway.Irene-Nat-gateway.id
+  destination_cidr_block = "0.0.0.0/0"
+}
