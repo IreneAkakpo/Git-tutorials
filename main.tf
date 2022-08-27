@@ -1,6 +1,6 @@
 # My VPC
 resource "aws_vpc" "Irene-vpc" {
-  cidr_block       = "10.0.0.0/16"
+  cidr_block       = var.cidr-for-vpc
   instance_tenancy = "default"
 
   tags = {
@@ -8,40 +8,58 @@ resource "aws_vpc" "Irene-vpc" {
   }
 }
 
-# Public subnet
+
+# Creating networking for project
+resource "aws_vpc" "DNS-setting" {
+  cidr_block           = "10.0.0.0/16"
+  instance_tenancy     = "default"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "Irene-vpc"
+  }
+}
+
+
+# Public subnet 1
 resource "aws_subnet" "public-subnet1" {
-  vpc_id     = aws_vpc.Irene-vpc.id
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = aws_vpc.Irene-vpc.id
+  cidr_block        = var.cidr-for-pubsub1
+  availability_zone = var.AZ-1
 
   tags = {
     Name = "public-subnet1"
   }
 }
 
-# Public subnet
+# Public subnet 2
 resource "aws_subnet" "public-subnet2" {
-  vpc_id     = aws_vpc.Irene-vpc.id
-  cidr_block = "10.0.2.0/24"
+  vpc_id            = aws_vpc.Irene-vpc.id
+  cidr_block        = var.cidr-for-pubsub2
+  availability_zone = var.AZ-2
 
   tags = {
     Name = "public-subnet2"
   }
 }
 
-# Private subnet
+# Private subnet 1
 resource "aws_subnet" "private-subnet1" {
-  vpc_id     = aws_vpc.Irene-vpc.id
-  cidr_block = "10.0.3.0/24"
+  vpc_id            = aws_vpc.Irene-vpc.id
+  cidr_block        = var.cidr-for-privsub1
+  availability_zone = var.AZ-3
 
   tags = {
     Name = "private-subnet1"
   }
 }
 
-# Private subnet
+# Private subnet 2
 resource "aws_subnet" "private-subnet2" {
-  vpc_id     = aws_vpc.Irene-vpc.id
-  cidr_block = "10.0.4.0/24"
+  vpc_id            = aws_vpc.Irene-vpc.id
+  cidr_block        = var.cidr-for-privsub2
+  availability_zone = var.AZ-3
 
   tags = {
     Name = "private-subnet2"
@@ -101,9 +119,9 @@ resource "aws_internet_gateway" "IGW" {
 
 # AWS Route IGW-Public routable
 resource "aws_route" "public-igw-route" {
-  route_table_id            = aws_route_table.public-route-table.id
-  gateway_id = aws_internet_gateway.IGW.id
-  destination_cidr_block    = "0.0.0.0/0"
+  route_table_id         = aws_route_table.public-route-table.id
+  gateway_id             = aws_internet_gateway.IGW.id
+  destination_cidr_block = "0.0.0.0/0"
 }
 
 # Create Elastic IP
@@ -114,7 +132,7 @@ resource "aws_eip" "Irene-EIP" {
 # Create NAT gateway
 resource "aws_nat_gateway" "Irene-Nat-gateway" {
   allocation_id = aws_eip.Irene-EIP.id
-  subnet_id = aws_subnet.public-subnet1.id
+  subnet_id     = aws_subnet.public-subnet1.id
 
   tags = {
     Name = "Irene-Nat-gateway"
@@ -123,7 +141,7 @@ resource "aws_nat_gateway" "Irene-Nat-gateway" {
 
 # Associating NATgateway with private route table
 resource "aws_route" "Irene-Nat-association" {
-  route_table_id = aws_route_table.private-route-table.id
-  nat_gateway_id = aws_nat_gateway.Irene-Nat-gateway.id
+  route_table_id         = aws_route_table.private-route-table.id
+  nat_gateway_id         = aws_nat_gateway.Irene-Nat-gateway.id
   destination_cidr_block = "0.0.0.0/0"
 }
